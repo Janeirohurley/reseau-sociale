@@ -10,12 +10,10 @@ module.exports.userInfo = (req, res) => {
   if (!ObjectId.isValid(req.params.id))
     return res.status(400).send("ID unknown " + req.params.id);
 
-  userModels
-    .findById(req.params.id, (err, docs) => {
+  userModels.findById(req.params.id, (err, docs) => {
       if (!err) res.status(200).send(docs);
       else console.log("id unknown: +" + err);
-    })
-    .select("-password");
+    }).select("-password");
 };
 
 module.exports.updateUser = async (req, res) => {

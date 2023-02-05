@@ -1,38 +1,42 @@
 const userModels = require("../models/user.models");
+const { errorSignup, errorSign } = require("../utils/error.utils");
 const jwt = require("jsonwebtoken");
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.TOKEN_SECRET, {
-    expiresIn: maxAge
+    expiresIn: maxAge,
   });
 };
 
 module.exports.signUp = async (req, res) => {
-  console.log(req.body);
   const { pseudo, email, password } = req.body;
 
   try {
     const user = await userModels.create({ pseudo, email, password });
     res.status(201).json({ user: user._id });
   } catch (err) {
-    res.status(500).send({ err });
+    const errors = errorSignup(err);
+    res.status(200).send({ errors });
   }
 };
 
 module.exports.signin = async (req, res) => {
-  console.log(req.body);
   const { pseudo, password } = req.body;
 
   try {
-    const user = await userModels.login({ pseudo, password });
+    const user = await userModels.login(pseudo, password);
     const token = createToken(user._id);
-    res.cookie("jwt", token, { maxAge: maxAge, HttpOnly: true });
-    res.status(200).json({user:user._id})
+    res.cookie("jwt", token, { maxAge: maxAge, httpOnly: true });
+    res.status(200).json({ user: user._id, token: token });
   } catch (err) {
-    res.status(500).send({ err });
+    const errors = errorSign(err);
+    res.status(200).send({ errors });
   }
 };
 
-module.exports.logout = async (req, res) => {};
+module.exports.logout = async (req, res) => {
+  res.cookie("jwt", "", { maxAge: 1 });
+  res.status(200).send("vous etez deconnecter merci d'avoir utiliser le site");
+};
